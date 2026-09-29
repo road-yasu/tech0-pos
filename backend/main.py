@@ -2,11 +2,18 @@ from datetime import datetime, date
 
 from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import Session
+from fastapi.middleware.cors import CORSMiddleware
 
 from database import get_db
 from models import User, Book, Tax, Customer
 
 app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000","http://127.0.0.1:3000"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.get('/hello')
 def hello():
@@ -30,7 +37,7 @@ def get_book(ISBN: str, db: Session = Depends(get_db)):
     if not f:
         raise HTTPException(status_code=404, detail="書籍が見つかりません。")
     return {
-        "id": f.book_id,
+        "book_id": f.book_id,
         "ISBN": f.isbn,
         "book_name": f.book_name,
         "price": f.price,
