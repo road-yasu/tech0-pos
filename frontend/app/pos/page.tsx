@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useEffect } from "react";
+import QrcodeReader from "../_components/QrcodeReader";
 import styles from "./page.module.css";
 
 type Customer = {
@@ -23,6 +24,8 @@ export default function Home() {
   const [bookQuery, setBookQuery] = useState("");
   const [cart, setCart] = useState<CartItem[]>([]);
   const [taxRate, setTaxRate] = useState<number | null>(null);
+  const [scannedTime, setScannedTime] = useState(new Date());
+  const [scannedResult, setScannedResult] = useState(null);
 
   const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0)
   const discountRate = customer ?customer.discount_rate / 100 : 0;
@@ -38,6 +41,16 @@ export default function Home() {
     };
     loadTax();
 }, []);
+
+  useEffect(() => {}, [scannedTime, scannedResult]);
+
+  // QRコードを読み取った時の実行する関数
+  const onNewScanResult = (result: any) => {
+    console.log('QRコードスキャン結果');
+    console.log(result);
+    setScannedTime(new Date());
+    setScannedResult(result);
+  };
 
   const searchCustomerRate = async () => {
     const res = await fetch(`http://127.0.0.1:8000/customer/rate/{id}?customer_id=${customerIdQuery}`);
@@ -60,13 +73,15 @@ export default function Home() {
   };
 
   const searchAndAddCart = async () => {
-    const res = await fetch(`http://127.0.0.1:8000/books/${bookQuery}`);
+    const isbn = scannedResult ?? bookQuery;
+    const res = await fetch(`http://127.0.0.1:8000/books/${isbn}`);
     if (!res.ok) {
         return;
     }
     const data:Book = await res.json();
-    console.log(data);
     addToCart(data);
+    setScannedResult(null);
+    setBookQuery("");
   }
 
   const changeQuantity = (isbn: string, diff: number) => {
@@ -83,9 +98,9 @@ export default function Home() {
     setCart((prev) => prev.filter((item) => item.ISBN !== isbn));
   };
 
-  const sumTotal = () => {
+  const PurchaseItem = async () => {
 
-  }
+  };
 
   return (
     <div>
@@ -107,7 +122,18 @@ export default function Home() {
           onChange={(e) => setBookQuery(e.target.value)}
           placeholder="ISBNを入力してください"
         />
+      <div>
+        <p>バーコード検索</p>
+        <p>スキャン結果：{scannedResult}</p>
+      </div>
+      <QrcodeReader
+        onScanSuccess={onNewScanResult}
+        onScanFailure={(error: any) => {
+          // console.log('Qr scan error');
+        }}
+      />
       <button onClick={searchAndAddCart}>取得</button>
+
       <h2>購入リスト</h2>
         <div>
           <ul>
@@ -125,6 +151,9 @@ export default function Home() {
         <p>消費税:{tax.toLocaleString()}円</p>
         <p>割引額:{discount.toLocaleString()}円</p>
         <p>合計:{total.toLocaleString()}円</p>
+        <div>
+          <button onClick={PurchaseItem}>購入</button>
+        </div>
     </div>
   );
 }

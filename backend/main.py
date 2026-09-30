@@ -1,11 +1,16 @@
-from datetime import datetime, date
+import math
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
 from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import Session
 from fastapi.middleware.cors import CORSMiddleware
 
 from database import get_db
-from models import User, Book, Tax, Customer
+from models import User, Book, Tax, Customer, Order, OrderDetail
+from schemas import OrderItem, OrderRequest
+
+GUEST_CUSTOMER_ID = 1 # 非会員のID
 
 app = FastAPI()
 app.add_middleware(
@@ -54,3 +59,57 @@ def get_customer_rate(customer_id:int, db:Session = Depends(get_db)):
         "customer_id": customer_id,
         "discount_rate": customer.discount_rate,
     }
+
+@app.post("/orders")
+def register_orders(req: OrderRequest, db: Session = Depends(get_db)):
+    if not req:
+        raise HTTPException(status_code=400, detail="購入リストが空です")
+    
+    lines = []
+    subtotal = 0
+    for item in req.items:
+        book = db.query(Book).filter(Book.isbn == item.isbn).first()
+        if book is None:
+            raise HTTPException(status_code=404, detail=f"書籍が見つかりません: {item.ISBN}")
+        subtotal += book.price * item.quantity
+        lines.append((book, item.quantity))
+    
+    discount_rate = 0
+    customer_id = req.customer_id if req.customer_id is not None else GUEST_CUSTOMER_ID
+    customer = db.query(Customer).filter(Customer.customer_id == customer_id)
+    if customer is None:
+        raise HTTPException(status_code=404, detail="会員が見つかりません")
+    discount_rate = customer.discount_rate
+    
+    tax_rate = db.query(Tax).order_by(Tax.id.desc()).fist().tax_rate
+
+    discount = math.floor(subtotal * discount_rate)
+    tax = math.floor((subtotal - discount) * tax_rate / 100)
+    total = subtotal + discount + tax
+
+    try :
+        order = Order(
+            customer_id = customer_id,
+            user_id = req.user_id,
+            subtotal = subtotal,
+            discount_rate = discount_rate,
+            tax_rate = tax_rate,
+            tax_amount = tax,
+            total_amount = total,
+        )
+        db.add(order)
+        db.flush()
+
+        for book, qty in lines:
+            db.add(OrderDetail(
+                order_id=order.order_id,
+                book_id=book.book_id,
+                price=book.price,
+                quantity=qty,
+            ))
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise HTTPException(status_code=500, detail="登録に失敗しました")
+    
+    return {"order_id": order.order_id, "total_amount": total}
