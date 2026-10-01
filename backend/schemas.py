@@ -2,7 +2,6 @@ from pydantic import BaseModel, Field
 
 class OrderItem(BaseModel):
     isbn: str
-    price: int
     quantity: int = Field(gt=0)
 
 class OrderRequest(BaseModel):
