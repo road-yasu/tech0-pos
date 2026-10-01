@@ -76,16 +76,16 @@ def register_orders(req: OrderRequest, db: Session = Depends(get_db)):
     
     discount_rate = 0
     customer_id = req.customer_id if req.customer_id is not None else GUEST_CUSTOMER_ID
-    customer = db.query(Customer).filter(Customer.customer_id == customer_id)
+    customer = db.query(Customer).filter(Customer.customer_id == customer_id).first()
     if customer is None:
         raise HTTPException(status_code=404, detail="会員が見つかりません")
     discount_rate = customer.discount_rate
-    
-    tax_rate = db.query(Tax).order_by(Tax.id.desc()).fist().tax_rate
 
-    discount = math.floor(subtotal * discount_rate)
-    tax = math.floor((subtotal - discount) * tax_rate / 100)
-    total = subtotal + discount + tax
+    tax_rate = db.query(Tax).order_by(Tax.tax_id.desc()).first().tax_rate
+
+    discount = math.floor(subtotal * (discount_rate / 100))
+    tax = math.floor((subtotal - discount) * (tax_rate / 100))
+    total = subtotal - discount + tax
 
     try :
         order = Order(
@@ -112,4 +112,4 @@ def register_orders(req: OrderRequest, db: Session = Depends(get_db)):
         db.rollback()
         raise HTTPException(status_code=500, detail="登録に失敗しました")
     
-    return {"order_id": order.order_id, "total_amount": total}
+    return {"order_id": order.order_id, "total_amount": total, "detail": "登録が完了しました"}

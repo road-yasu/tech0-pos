@@ -30,7 +30,7 @@ export default function Home() {
   const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0)
   const discountRate = customer ?customer.discount_rate / 100 : 0;
   const discount = Math.floor(subtotal * discountRate);
-  const tax = Math.floor((subtotal - discount) * taxRate);
+  const tax = Math.floor((subtotal - discount) * (taxRate / 100));
   const total = subtotal - discount + tax;
 
   useEffect( () => {
@@ -46,16 +46,22 @@ export default function Home() {
 
   // QRコードを読み取った時の実行する関数
   const onNewScanResult = (result: any) => {
-    console.log('QRコードスキャン結果');
-    console.log(result);
     setScannedTime(new Date());
     setScannedResult(result);
   };
 
   const searchCustomerRate = async () => {
+    if (customerIdQuery == "") { return; }
     const res = await fetch(`http://127.0.0.1:8000/customer/rate/{id}?customer_id=${customerIdQuery}`);
     const data: Customer = await res.json();
+    if (!res.ok) {
+        alert(data.detail);
+        setCustomer(null);
+        setCustomerIdQuery("");
+        return;
+    }
     setCustomer(data);
+    setCustomerIdQuery("");
   }
 
   const addToCart = (book: Book) => {
@@ -98,8 +104,26 @@ export default function Home() {
     setCart((prev) => prev.filter((item) => item.ISBN !== isbn));
   };
 
-  const PurchaseItem = async () => {
-
+  const PurchaseItems = async () => {
+    const items = cart.map((item) => ({isbn: item.ISBN, quantity: item.quantity}))
+    console.log(items);
+    const json = JSON.stringify({customer_id: customer.customer_id, user_id: 1, items})
+    console.log(json);
+    const res = await fetch("http://127.0.0.1:8000/orders", {
+        method: "POST",
+        body: json,
+        headers: {
+            "Content-Type": "application/json",
+        },
+    });
+    const data = res.json();
+    if (!res.ok) {
+        alert(data.detail);
+        return;
+    }
+    alert(data.message);
+    setCart([]);
+    setCustomer(null);
   };
 
   return (
@@ -152,7 +176,7 @@ export default function Home() {
         <p>割引額:{discount.toLocaleString()}円</p>
         <p>合計:{total.toLocaleString()}円</p>
         <div>
-          <button onClick={PurchaseItem}>購入</button>
+          <button onClick={PurchaseItems}>決済</button>
         </div>
     </div>
   );
