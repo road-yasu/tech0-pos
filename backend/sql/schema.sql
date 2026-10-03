@@ -52,3 +52,11 @@ CREATE TABLE IF NOT EXISTS order_details (
   FOREIGN KEY (order_id) REFERENCES orders(order_id),
   FOREIGN KEY (book_id) REFERENCES books(book_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS loginlogs (
+  loginlog_id       INT AUTO_INCREMENT PRIMARY KEY,
+  user_id        INT NOT NULL,
+  ip_address     VARCHAR(255),
+  logined_at     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(user_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
