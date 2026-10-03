@@ -1,14 +1,15 @@
 import math
 from datetime import datetime
+from security import verify_password
 from zoneinfo import ZoneInfo
 
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 from fastapi.middleware.cors import CORSMiddleware
 
 from database import get_db
-from models import User, Book, Tax, Customer, Order, OrderDetail
-from schemas import OrderItem, OrderRequest
+from models import User, Book, Tax, Customer, Order, OrderDetail, LoginLogs
+from schemas import OrderRequest, LoginRequest
 
 GUEST_CUSTOMER_ID = 1 # 非会員のID
 
@@ -23,6 +24,25 @@ app.add_middleware(
 @app.get('/hello')
 def hello():
     return {"message": "hello"}
+
+@app.post('/login')
+def login(req: LoginRequest, request: Request, db: Session = Depends(get_db)):
+    # 1. user_name で User を1件検索する
+    user = db.query(User).filter(User.user_name == req.user_name).first()
+    # 2. 見つからない、または verify_password が False なら
+    #    401エラー「IDまたはパスワードが違います」
+    if user is None or not verify_password(req.password, user.password_hash):
+        raise HTTPException(status_code=401, detail="名前またはパスワードが違います")
+    # 3. LoginLog を保存する（IPは request.client.host で取れます）
+    db.add(
+        LoginLogs(
+            user_id = user.user_id,
+            ip_address = request.client.host if request.client else None,
+        )
+    )
+    db.commit()
+    # 4. user_id と user_name を返す
+    return {"user_id": user.user_id, "user_name": user.user_name}
 
 @app.get("/tax")
 def get_tax(db: Session = Depends(get_db)):

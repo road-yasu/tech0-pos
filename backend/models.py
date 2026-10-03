@@ -168,3 +168,25 @@ class OrderDetail(Base):
         INTEGER,
         nullable=False,
     )
+
+class LoginLogs(Base):
+    __tablename__ = "loginlogs"
+    loginlog_id: Mapped[int] = mapped_column(
+        INTEGER,
+        primary_key=True,
+        autoincrement=True,
+    )
+    user_id: Mapped[int] = mapped_column(
+        INTEGER,
+        ForeignKey("users.user_id"),
+        nullable=False,
+    )
+    ip_address: Mapped[str] = mapped_column(
+        VARCHAR(255),
+        nullable=True,
+    )
+    logined_at: Mapped[datetime] = mapped_column(
+        DATETIME(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(ZoneInfo("Asia/Tokyo"))
+    )

@@ -8,3 +8,7 @@ class OrderRequest(BaseModel):
     customer_id: int | None = None
     user_id: int
     items: list[OrderItem] = Field(min_length=1)
+
+class LoginRequest(BaseModel):
+    user_name: str
+    password: str
