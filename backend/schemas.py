@@ -6,7 +6,6 @@ class OrderItem(BaseModel):
 
 class OrderRequest(BaseModel):
     customer_id: int | None = None
-    user_id: int
     items: list[OrderItem] = Field(min_length=1)
 
 class LoginRequest(BaseModel):
