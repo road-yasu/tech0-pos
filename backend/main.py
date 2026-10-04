@@ -1,15 +1,20 @@
 import math
 from datetime import datetime
 from security import verify_password
-from zoneinfo import ZoneInfo
 
 from fastapi import FastAPI, Depends, HTTPException, Request
-from sqlalchemy.orm import Session
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from sqlalchemy.orm import Session
+
+import jwt
 
 from database import get_db
 from models import User, Book, Tax, Customer, Order, OrderDetail, LoginLogs
 from schemas import OrderRequest, LoginRequest
+from security import JWT_SECRET_KEY, JWT_ALGORITHM, create_access_token
+
+bearer_scheme = HTTPBearer(auto_error=False)
 
 GUEST_CUSTOMER_ID = 1 # 非会員のID
 
@@ -20,6 +25,31 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+def get_current_user(
+        credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
+        db: Session = Depends(get_db)
+) -> User:
+    unauthorized = HTTPException(
+        status_code=401,
+        detail="認証が必要です",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+
+    if credentials is None:
+        raise unauthorized
+    token = credentials.credentials
+
+    try:
+        payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
+    except jwt.InvalidTokenError:
+        raise unauthorized
+    user_id = int(payload["sub"])
+
+    user = db.query(User).filter(User.user_id == user_id).first()
+    if user is None:
+        raise unauthorized
+    return user
 
 @app.get('/hello')
 def hello():
@@ -42,7 +72,13 @@ def login(req: LoginRequest, request: Request, db: Session = Depends(get_db)):
     )
     db.commit()
     # 4. user_id と user_name を返す
-    return {"user_id": user.user_id, "user_name": user.user_name}
+    token = create_access_token(user.user_id)
+    return {
+        "access_token": token,
+        "token_type": "bearer",
+        "user_id": user.user_id,
+        "user_name": user.user_name
+    }
 
 @app.get("/tax")
 def get_tax(db: Session = Depends(get_db)):
@@ -81,7 +117,11 @@ def get_customer_rate(customer_id:int, db:Session = Depends(get_db)):
     }
 
 @app.post("/orders")
-def register_orders(req: OrderRequest, db: Session = Depends(get_db)):
+def register_orders(
+    req: OrderRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
     if not req:
         raise HTTPException(status_code=400, detail="購入リストが空です")
     
@@ -110,7 +150,7 @@ def register_orders(req: OrderRequest, db: Session = Depends(get_db)):
     try :
         order = Order(
             customer_id = customer_id,
-            user_id = req.user_id,
+            user_id = current_user.user_id,
             subtotal = subtotal,
             discount_rate = discount_rate,
             tax_rate = tax_rate,
