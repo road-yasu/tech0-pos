@@ -10,8 +10,8 @@ TABLES = {
     "customers": Customer,
     "tax": Tax,
     "orders": Order,
-    "order_detail": OrderDetail,
-    "login_logs": LoginLogs,
+    "order_details": OrderDetail,
+    "loginlogs": LoginLogs,
 }
 
 # 画面に出さない列
