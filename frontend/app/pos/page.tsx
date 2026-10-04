@@ -24,6 +24,8 @@ export default function Home() {
   const [taxRate, setTaxRate] = useState<number | null>(null);
   const [isbnInput, setIsbnInput] = useState("");
   const [isScanning, setIsScanning] = useState(false);
+  const [loginUserId, setLoginUserId] = useState<number | null>(null);
+  const [loginUserName, setLoginUserName] = useState("");
 
   const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0)
   const discountRate = customer ?customer.discount_rate / 100 : 0;
@@ -38,7 +40,14 @@ export default function Home() {
         setTaxRate(data.tax);
     };
     loadTax();
-}, []);
+  }, []);
+
+  useEffect( () => {
+    const userId = sessionStorage.getItem("userId");
+    const userName = sessionStorage.getItem("userName");
+    if (userId) setLoginUserId(Number(userId));
+    if (userName) setLoginUserName(userName);
+  }, []);
 
   const handleDetected = (isbn: string) => {
   setIsbnInput(isbn);
@@ -85,8 +94,8 @@ export default function Home() {
   }
 
   const changeQuantity = (isbn: string, diff: number) => {
-    setCart((prev) => 
-        prev.map((item) => 
+    setCart((prev) =>
+        prev.map((item) =>
             item.ISBN === isbn
             ? {...item, quantity: Math.max(1, item.quantity + diff)}
             : item
@@ -99,10 +108,11 @@ export default function Home() {
   };
 
   const PurchaseItems = async () => {
+    if (loginUserId === null) { alert("ログインしてください"); return; }
     if (cart.length === 0){alert("カートの中身がありません。"); return;}
     const items = cart.map((item) => ({isbn: item.ISBN, quantity: item.quantity}))
     const customerId = customer ? customer.customer_id : null
-    const json = JSON.stringify({customer_id: customerId, user_id: 1, items})
+    const json = JSON.stringify({customer_id: customerId, user_id: loginUserId, items})
     const res = await fetch("http://127.0.0.1:8000/orders", {
         method: "POST",
         body: json,
@@ -124,7 +134,7 @@ export default function Home() {
     <main className="min-h-screen bg-gray-100 p-4">
          <div className="mx-auto max-w-md md:max-w-2xl space-y-4 rounded-lg border border-gray-300 bg-white p-4 shadow-sm">
             <div className="flex justify-end">
-                <span className="rounded border border-gray-400 px-3 py-1 text-sm">ログインID</span>
+                <span className="rounded border border-gray-400 px-3 py-1 text-sm">{loginUserId} : {loginUserName}</span>
             </div>
             <h1 className="text-center text-2xl font-bold">テクゼロン書店POS</h1>
             <div className="flex items-center gap-2">
