@@ -23,6 +23,7 @@ frontend/next-env.d.ts
 # DB（念のため）
 *.db
 *.sqlite3
+seed_data/
 
 # Azure設定ファイル
 backend/local.settings.json
