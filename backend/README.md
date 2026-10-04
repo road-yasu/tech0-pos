@@ -63,7 +63,7 @@ python check.py <テーブル名>
 python check.py books
 ```
 
-指定できる名前：`users` / `books` / `customers` / `tax` / `orders` / `order_detail` / `login_logs`
+指定できる名前：`users` / `books` / `customers` / `tax` / `orders` / `order_details` / `loginlogs`
 
 - 引数なしで実行すると、使い方が表示される
 - `users` の `password_hash` は表示しない

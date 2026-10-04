@@ -1,11 +1,5 @@
-import Link from "next/link";
+import { redirect } from "next/navigation"
 
 export default function Home() {
-  return (
-    <div>
-      <Link href="/login">ログイン</Link>
-      <br></br>
-      <Link href="/pos">POS</Link>
-    </div>
-  )
+  redirect("/login");
 }
