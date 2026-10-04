@@ -25,7 +25,7 @@ export default function Login() {
         // 3. 401なら { error: "IDまたはパスワードが違います" } を返す
         //    それ以外の失敗なら { error: "ログインに失敗しました" } を返す
         const data = await res.json()
-        if (data.status_code === 401) {
+        if (res.status === 401) {
             return {error: "ユーザー名またはパスワードが違います"};
         }
         if (!res.ok) {
@@ -33,8 +33,9 @@ export default function Login() {
         }
         // 4. 成功したら、返ってきた user_id と user_name を sessionStorage に保存し、
         //    router.push("/pos") で移動する
-        sessionStorage.setItem("userId", String(data.user_id));
-        sessionStorage.setItem("userName", String(data.user_name));
+        sessionStorage.setItem("accessToken", data.access_token)
+        sessionStorage.setItem("userId", data.user_id)
+        sessionStorage.setItem("userName", data.user_name)
         router.push("/pos");
         return {error: ""}
     } catch {

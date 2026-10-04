@@ -1,6 +1,8 @@
 "use client";
 import { useState } from "react";
 import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+
 import BarcodeScanner from "../_components/BarcodeScanner";
 
 type Customer = {
@@ -27,6 +29,8 @@ export default function Home() {
   const [loginUserId, setLoginUserId] = useState<number | null>(null);
   const [loginUserName, setLoginUserName] = useState("");
 
+  const router = useRouter();
+
   const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0)
   const discountRate = customer ?customer.discount_rate / 100 : 0;
   const discount = Math.floor(subtotal * discountRate);
@@ -43,6 +47,11 @@ export default function Home() {
   }, []);
 
   useEffect( () => {
+    const token = sessionStorage.getItem("accessToken")
+    if (!token) {
+      router.replace("/login");
+      return;
+    }
     const userId = sessionStorage.getItem("userId");
     const userName = sessionStorage.getItem("userName");
     if (userId) setLoginUserId(Number(userId));
@@ -112,15 +121,23 @@ export default function Home() {
     if (cart.length === 0){alert("カートの中身がありません。"); return;}
     const items = cart.map((item) => ({isbn: item.ISBN, quantity: item.quantity}))
     const customerId = customer ? customer.customer_id : null
-    const json = JSON.stringify({customer_id: customerId, user_id: loginUserId, items})
+    const token = sessionStorage.getItem("accessToken");
+    const json = JSON.stringify({customer_id: customerId, items})
     const res = await fetch("http://127.0.0.1:8000/orders", {
         method: "POST",
         body: json,
         headers: {
+            "Authorization": `Bearer ${token}`,
             "Content-Type": "application/json",
         },
     });
     const data = await res.json();
+    if (res.status === 401) {
+      alert("認証に失敗しました")
+      sessionStorage.clear();
+      router.replace("/login");
+      return;
+    }
     if (!res.ok) {
         alert(data.detail);
         return;
