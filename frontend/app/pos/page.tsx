@@ -113,11 +113,13 @@ export default function Home() {
     const items = cart.map((item) => ({isbn: item.ISBN, quantity: item.quantity}))
     const customerId = customer ? customer.customer_id : null
     const json = JSON.stringify({customer_id: customerId, user_id: loginUserId, items})
+    const token = sessionStorage.getItem("token");
     const res = await fetch("http://127.0.0.1:8000/orders", {
         method: "POST",
         body: json,
         headers: {
             "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`,
         },
     });
     const data = await res.json();

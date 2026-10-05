@@ -35,6 +35,7 @@ export default function Login() {
         //    router.push("/pos") で移動する
         sessionStorage.setItem("userId", String(data.user_id));
         sessionStorage.setItem("userName", String(data.user_name));
+        sessionStorage.setItem("token", data.access_token);
         router.push("/pos");
         return {error: ""}
     } catch {
