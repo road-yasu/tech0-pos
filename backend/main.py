@@ -130,7 +130,7 @@ def register_orders(
     for item in req.items:
         book = db.query(Book).filter(Book.isbn == item.isbn).first()
         if book is None:
-            raise HTTPException(status_code=404, detail=f"書籍が見つかりません: {item.ISBN}")
+            raise HTTPException(status_code=404, detail=f"書籍が見つかりません: {item.isbn}")
         subtotal += book.price * item.quantity
         lines.append((book, item.quantity))
     
@@ -171,5 +171,5 @@ def register_orders(
     except Exception:
         db.rollback()
         raise HTTPException(status_code=500, detail="登録に失敗しました")
-    
-    return {"order_id": order.order_id, "total_amount": total, "detail": "登録が完了しました"}
+
+    return {"detail": "購入が完了しました", "order_id": order.order_id}
