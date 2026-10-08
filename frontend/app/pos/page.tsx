@@ -17,6 +17,10 @@ type Book = {
 
 type CartItem = Book & {quantity: number}
 
+type ScreenState =   "待機中" | "検索中" | "処理中" | "完了";
+
+const ITEM_COUNT_MAX = 99;
+
 export default function Home() {
   const [customerIdQuery, setCustomerIdQuery] = useState("");
   const [customer, setCustomer] = useState<Customer | null>(null);
@@ -26,6 +30,7 @@ export default function Home() {
   const [isScanning, setIsScanning] = useState(false);
   const [loginUserId, setLoginUserId] = useState<number | null>(null);
   const [loginUserName, setLoginUserName] = useState("");
+  const [state, setState] = useState<ScreenState>("待機中");
 
   const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0)
   const discountRate = customer ?customer.discount_rate / 100 : 0;
@@ -49,6 +54,10 @@ export default function Home() {
     if (userName) setLoginUserName(userName);
   }, []);
 
+  function canCheckout(items: CartItem[]): boolean {
+  return items.length > 0 && items.length <= ITEM_COUNT_MAX;
+}
+
   const handleDetected = (isbn: string) => {
   setIsbnInput(isbn);
   setIsScanning(false);
@@ -56,6 +65,7 @@ export default function Home() {
 
   const searchCustomerRate = async () => {
     if (customerIdQuery == "") { alert("会員IDを入力してください"); return; }
+    setState("検索中");
     const res = await fetch(`http://127.0.0.1:8000/customer/rate/{id}?customer_id=${customerIdQuery}`);
     const data: Customer = await res.json();
     if (!res.ok) {
@@ -66,6 +76,7 @@ export default function Home() {
     }
     setCustomer(data);
     setCustomerIdQuery("");
+    setState("待機中");
   }
 
   const addToCart = (book: Book) => {
@@ -83,6 +94,7 @@ export default function Home() {
   };
 
   const searchAndAddCart = async () => {
+    setState("検索中");
     if (!isbnInput) {alert("ISBNを入力してください"); return;}
     const res = await fetch(`http://127.0.0.1:8000/books/${isbnInput}`);
     if (!res.ok) {
@@ -91,6 +103,7 @@ export default function Home() {
     const data:Book = await res.json();
     addToCart(data);
     setIsbnInput("");
+    setState("待機中");
   }
 
   const changeQuantity = (isbn: string, diff: number) => {
@@ -109,7 +122,7 @@ export default function Home() {
 
   const PurchaseItems = async () => {
     if (loginUserId === null) { alert("ログインしてください"); return; }
-    if (cart.length === 0){alert("カートの中身がありません。"); return;}
+    setState("処理中");
     const items = cart.map((item) => ({isbn: item.ISBN, quantity: item.quantity}))
     const customerId = customer ? customer.customer_id : null
     const json = JSON.stringify({customer_id: customerId, user_id: loginUserId, items})
@@ -130,6 +143,7 @@ export default function Home() {
     alert(`${data.detail}（注文番号: ${data.order_id}）`);
     setCart([]);
     setCustomer(null);
+    setState("待機中")
   };
 
   return (
@@ -142,6 +156,7 @@ export default function Home() {
             <div className="flex items-center gap-2">
                 <input
                 value={customerIdQuery}
+                disabled={state === "検索中"}
                 onChange={(e) => setCustomerIdQuery(e.target.value)}
                 placeholder="会員IDを入力してください"
                 className="w-48 rounded border border-gray-400 px-2 py-1 text-sm"
@@ -150,7 +165,7 @@ export default function Home() {
                 onClick={searchCustomerRate}
                 className="cursor-pointer rounded bg-gray-200 px-3 py-1 text-sm hover:bg-gray-300"
                 >
-                取得
+                  取得
                 </button>
           <div 
           className={`flex-1 rounded border border-gray-400 px-2 py-1 text-center text-sm
@@ -178,6 +193,7 @@ export default function Home() {
             )}
             <button
                 onClick={searchAndAddCart}
+                disabled={state === "検索中"}
                 className="cursor-pointer rounded border border-gray-400 px-2 py-1 text-sm hover:bg-gray-100"
             >
                 取得
@@ -241,10 +257,12 @@ export default function Home() {
             税率 {taxRate}%
           </span>
           <button
+          type="button"
+            disabled={!canCheckout(cart) || state === "処理中" || state === "検索中"}
             onClick={PurchaseItems}
             className="cursor-pointer rounded bg-blue-600 px-8 py-3 font-bold text-white hover:bg-blue-700"
           >
-          決済
+          {state === "処理中" ? "決済中...": "決済"}
           </button>
         </div>
         </div>
