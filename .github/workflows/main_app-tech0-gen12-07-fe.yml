@@ -9,7 +9,7 @@ on:
       - 'main'
     paths:
       - "frontend/**"
-      - ".github/workflows/deploy-frontend.yml"
+      - ".github/workflows/main_app-tech0-gen12-07-fe.yml"
   workflow_dispatch:
 
 jobs:
