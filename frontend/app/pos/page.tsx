@@ -33,9 +33,9 @@ export default function Home() {
   const [state, setState] = useState<ScreenState>("待機中");
 
   const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0)
-  const discountRate = customer ?customer.discount_rate / 100 : 0;
+  const discountRate = customer ? customer.discount_rate / 100 : 0;
   const discount = Math.floor(subtotal * discountRate);
-  const tax = Math.floor((subtotal - discount) * (taxRate / 100));
+  const tax = taxRate != null ? Math.floor((subtotal - discount) * (taxRate / 100)) : 0;
   const total = subtotal - discount + tax;
 
   useEffect( () => {
@@ -69,7 +69,7 @@ export default function Home() {
     const res = await fetch(`http://127.0.0.1:8000/customer/rate/{id}?customer_id=${customerIdQuery}`);
     const data: Customer = await res.json();
     if (!res.ok) {
-        alert(data.detail);
+        alert("会員が見つかりませんでした");
         setCustomer(null);
         setCustomerIdQuery("");
         return;
