@@ -32,6 +32,18 @@ jobs:
           npm run build --if-present
           npm run test --if-present
 
+      - name: Azureへ送るファイルを準備
+        working-directory: frontend
+        run: |
+          rm -rf deploy
+          mkdir -p deploy
+          cp -a .next/standalone/. deploy/
+          if [ -d public ]; then
+            cp -a public deploy/public
+          fi
+          mkdir -p deploy/.next
+          cp -a .next/static deploy/.next/static
+          
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
