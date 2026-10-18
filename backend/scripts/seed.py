@@ -1,9 +1,9 @@
 import csv
 import sys
 
-from backend.app.database import SessionLocal
-from backend.app.models.models import Book, User, Customer
-from backend.app.security import hash_password
+from app.database import SessionLocal
+from app.models.models import Book, User, Customer
+from app.security import hash_password
 
 
 def seed_books(db, rows):
