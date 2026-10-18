@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 
 type LoginState = { error: string };
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://127.0.0.1:8000";
+
 export default function Login() {
     const router = useRouter();
 
@@ -15,7 +17,7 @@ export default function Login() {
     const json = JSON.stringify({user_name: userName, password: password})
     // 2. POS画面と同じAPIのURLに、/login へ POST する（JSONで送る）
     try{
-        const res = await fetch("http://127.0.0.1:8000/login", {
+        const res = await fetch(`${API_BASE_URL}/login`, {
             method: "POST",
             body: json,
             headers: {
