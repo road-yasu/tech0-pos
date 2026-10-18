@@ -1,7 +1,7 @@
 import sys
 
-from backend.app.database import SessionLocal
-from backend.app.models.models import User, Book, Customer, Tax, Order, OrderDetail, LoginLogs
+from app.database import SessionLocal
+from app.models.models import User, Book, Customer, Tax, Order, OrderDetail, LoginLogs
 
 # テーブル名
 TABLES = {
