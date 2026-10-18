@@ -13,7 +13,7 @@ permissions:
   contents: read
 
 env:
-  AZURE_WEBAPP_NAME: <バックエンドのApp Service名>
+  AZURE_WEBAPP_NAME: app-tech0-gen12-07-be
   PYTHON_VERSION: "3.11"
 
 jobs:
