@@ -13,7 +13,7 @@ load_dotenv()
 DB_HOST = os.environ["HOST_NAME"]
 DB_USER = os.environ["USER_NAME"]
 DB_PASSWORD = os.environ["PASSWORD"]
-DB_PORT = os.environ["PORT"]
+DB_PORT = os.environ["DB_PORT"]
 DB_NAME = os.environ["DB_NAME"]
 
 database_url = URL.create(
