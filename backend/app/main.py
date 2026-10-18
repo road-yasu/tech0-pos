@@ -1,6 +1,6 @@
 import math
 from datetime import datetime
-from security import verify_password
+from app.security import verify_password
 
 from fastapi import FastAPI, Depends, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -9,10 +9,10 @@ from sqlalchemy.orm import Session
 
 import jwt
 
-from database import get_db
-from models import User, Book, Tax, Customer, Order, OrderDetail, LoginLogs
-from schemas import OrderRequest, LoginRequest
-from security import JWT_SECRET_KEY, JWT_ALGORITHM, create_access_token
+from app.database import get_db
+from app.models.models import User, Book, Tax, Customer, Order, OrderDetail, LoginLogs
+from app.schemas import OrderRequest, LoginRequest
+from app.security import JWT_SECRET_KEY, JWT_ALGORITHM, create_access_token
 
 bearer_scheme = HTTPBearer(auto_error=False)
 

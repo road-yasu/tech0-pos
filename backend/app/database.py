@@ -1,4 +1,3 @@
-import datetime
 import os
 
 from collections.abc import Generator
@@ -6,7 +5,7 @@ from collections.abc import Generator
 from dotenv import load_dotenv
 from sqlalchemy import URL, create_engine
 from sqlalchemy.orm import Session, sessionmaker
-from models import Base, User, Book, Customer, Tax
+from app.models.models import Base
 
 
 load_dotenv()
