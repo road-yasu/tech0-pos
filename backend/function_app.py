@@ -1,5 +1,5 @@
 import azure.functions as func
-from backend.app.main import app as fastapi_app
+from app.main import app as fastapi_app
 
 app = func.AsgiFunctionApp(
     app=fastapi_app,
