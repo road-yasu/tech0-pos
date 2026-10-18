@@ -18,8 +18,14 @@ from app.security import JWT_SECRET_KEY, JWT_ALGORITHM, create_access_token
 bearer_scheme = HTTPBearer(auto_error=False)
 
 GUEST_CUSTOMER_ID = 1 # 非会員のID
+IS_PROD = os.getenv("ENV") == "production"
 
-app = FastAPI()
+app = FastAPI(
+    docs_url=None if IS_PROD else "/docs",
+    redocs_url=None if IS_PROD else "/redocs",
+    openapi_url=None if IS_PROD else "/openapi.json",
+)
+
 frontend_origin = os.getenv("FRONTEND_ORIGIN", "").rstrip("/")
 
 allowed_origins=[
