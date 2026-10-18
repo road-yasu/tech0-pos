@@ -20,6 +20,7 @@ type CartItem = Book & {quantity: number}
 type ScreenState =   "待機中" | "検索中" | "処理中" | "完了";
 
 const ITEM_COUNT_MAX = 99;
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://127.0.0.1:8000";
 
 export default function Home() {
   const [customerIdQuery, setCustomerIdQuery] = useState("");
@@ -40,7 +41,7 @@ export default function Home() {
 
   useEffect( () => {
     const loadTax = async () => {
-        const res = await fetch("http://127.0.0.1:8000/tax");
+        const res = await fetch(`${API_BASE_URL}/tax`);
         const data = await res.json();
         setTaxRate(data.tax);
     };
@@ -66,7 +67,7 @@ export default function Home() {
   const searchCustomerRate = async () => {
     if (customerIdQuery == "") { alert("会員IDを入力してください"); return; }
     setState("検索中");
-    const res = await fetch(`http://127.0.0.1:8000/customer/rate/{id}?customer_id=${customerIdQuery}`);
+    const res = await fetch(`${API_BASE_URL}/customer/rate/{id}?customer_id=${customerIdQuery}`);
     const data: Customer = await res.json();
     if (!res.ok) {
         alert("会員が見つかりませんでした");
@@ -96,7 +97,7 @@ export default function Home() {
   const searchAndAddCart = async () => {
     setState("検索中");
     if (!isbnInput) {alert("ISBNを入力してください"); return;}
-    const res = await fetch(`http://127.0.0.1:8000/books/${isbnInput}`);
+    const res = await fetch(`${API_BASE_URL}/books/${isbnInput}`);
     if (!res.ok) {
         return;
     }
@@ -127,7 +128,7 @@ export default function Home() {
     const customerId = customer ? customer.customer_id : null
     const json = JSON.stringify({customer_id: customerId, user_id: loginUserId, items})
     const token = sessionStorage.getItem("token");
-    const res = await fetch("http://127.0.0.1:8000/orders", {
+    const res = await fetch(`${API_BASE_URL}/orders`, {
         method: "POST",
         body: json,
         headers: {
