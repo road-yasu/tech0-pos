@@ -67,7 +67,10 @@ export default function Home() {
   const searchCustomerRate = async () => {
     if (customerIdQuery == "") { alert("会員IDを入力してください"); return; }
     setState("検索中");
-    const res = await fetch(`${API_BASE_URL}/customer/rate/{id}?customer_id=${customerIdQuery}`);
+    const token = sessionStorage.getItem("token");
+    const res = await fetch(`${API_BASE_URL}/customer/rate/${customerIdQuery}`, {
+        headers: { Authorization: `Bearer ${token}` },
+    });
     const data: Customer = await res.json();
     if (!res.ok) {
         alert("会員が見つかりませんでした");

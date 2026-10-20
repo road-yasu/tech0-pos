@@ -2,7 +2,7 @@ from pydantic import BaseModel, Field
 
 class OrderItem(BaseModel):
     isbn: str
-    quantity: int = Field(gt=0)
+    quantity: int = Field(gt=0, le=99)
 
 class OrderRequest(BaseModel):
     customer_id: int | None = None
