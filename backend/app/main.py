@@ -22,7 +22,7 @@ IS_PROD = os.getenv("ENV") == "production"
 
 app = FastAPI(
     docs_url=None if IS_PROD else "/docs",
-    redocs_url=None if IS_PROD else "/redocs",
+    redoc_url=None if IS_PROD else "/redoc",
     openapi_url=None if IS_PROD else "/openapi.json",
 )
 
@@ -120,10 +120,12 @@ def get_book(ISBN: str, db: Session = Depends(get_db)):
         "price": f.price,
     }
 
-@app.get("/customer/rate/{id}")
-def get_customer_rate(customer_id:int, db:Session = Depends(get_db)):
-    if not customer_id:
-        raise HTTPException(status_code=422, detail="idがありません。")
+@app.get("/customer/rate/{customer_id}")
+def get_customer_rate(
+    customer_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     customer = db.query(Customer).filter(Customer.customer_id == customer_id).first()
     if not customer:
         raise HTTPException(status_code=404, detail="顧客情報が見つかりません。")
